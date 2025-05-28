@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeakPal - 등산 트레킹 앱</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8f9fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #22c55e, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            color: #6b7280;
+            font-weight: 400;
+        }
+        
+        .screens-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .phone-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .phone-frame {
+            width: 320px;
+            height: 640px;
+            background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+            border-radius: 35px;
+            padding: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            border-radius: 25px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .screen-title {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 1.1rem;
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            height: 44px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 16px 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        /* Content Area */
+        .content {
+            padding: 20px;
+            height: calc(100% - 44px - 60px);
+            overflow-y: auto;
+        }
+        
+        .content.with-header {
+            height: calc(100% - 44px - 56px - 60px);
+        }
+        
+        /* Weather Widget */
+        .weather-widget {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .weather-temp {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .weather-desc {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* Map Area */
+        .map-area {
+            height: 280px;
+            background: linear-gradient(45deg, #f0fdf4, #dcfce7);
+            border-radius: 16px;
+            position: relative;
+            margin-bottom: 20px;
+            border: 2px solid #f3f4f6;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .map-btn {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .map-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        
+        .current-location {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #374151;
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .btn-primary {
+            flex: 1;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        /* Trail Card */
+        .trail-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid #f3f4f6;
+        }
+        
+        .trail-card h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+        
+        .trail-info {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+        
+        .trail-rating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .rating-stars {
+            color: #fbbf24;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #f3f4f6;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #22c55e;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        /* Tracking Controls */
+        .tracking-controls {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            font-size: 12px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .control-btn.start { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .control-btn.pause { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .control-btn.stop { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .control-btn.photo { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .control-btn.sos { 
+            background: linear-gradient(135deg, #dc2626, #b91c1c); 
+            animation: pulse 2s infinite;
+        }
+        
+        /* History Items */
+        .history-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #f3f4f6;
+        }
+        
+        .trail-thumb {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+        
+        .trail-info-text h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1f2937;
+        }
+        
+        .trail-info-text p {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+        
+        .trail-status {
+            font-size: 12px;
+            color: #22c55e;
+            font-weight: 600;
+        }
+        
+        /* Community Posts */
+        .community-post {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid #f3f4f6;
+        }
+        
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .user-info h5 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+        
+        .user-info p {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .post-content {
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        
+        .post-image {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(45deg, #f0fdf4, #dcfce7);
+            border-radius: 12px;
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .post-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #6b7280;
+            padding-top: 12px;
+            border-top: 1px solid #f3f4f6;
+        }
+        
+        .post-actions {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .post-action {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        
+        .post-action:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 50px;
+        }
+        
+        .nav-item.active {
+            color: #22c55e;
+        }
+        
+        .nav-item:not(.active) {
+            color: #9ca3af;
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+        }
+        
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        /* SOS Screen Specific */
+        .sos-screen {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        }
+        
+        .sos-header {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+        }
+        
+        .sos-content {
+            text-align: center;
+            padding: 40px 20px 20px;
+        }
+        
+        .sos-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .sos-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #dc2626;
+            margin-bottom: 8px;
+        }
+        
+        .sos-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+        
+        .location-info {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .location-info h4 {
+            color: #dc2626;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .location-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .location-detail strong {
+            color: #1f2937;
+        }
+        
+        .emergency-contacts {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .emergency-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .emergency-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .emergency-btn.primary {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+        }
+        
+        .emergency-btn.secondary {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        
+        .emergency-btn.full {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+        
+        .cancel-btn {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* Monthly Stats */
+        .monthly-stats {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .monthly-stats h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .stats-item {
+            text-align: center;
+        }
+        
+        .stats-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stats-text {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        /* Write Button */
+        .write-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .write-btn {
+            flex: 1;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .write-btn.secondary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .screens-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .phone-frame {
+                width: 100%;
+                max-width: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏔️ PeakPal</h1>
+            <p>안전하고 즐거운 등산을 위한 스마트 트레킹 앱</p>
+        </div>
+
+        <div class="screens-grid">
+            <!-- 홈 화면 -->
+            <div class="phone-container">
+                <div class="phone-frame">
+                    <div class="screen">
+                        <div class="status-bar">
+                            <div class="status-left">
+                                <span>9:41</span>
+                            </div>
+                            <div class="status-right">
+                                <span>🔋</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="app-header">
+                            📍 북한산국립공원
+                        </div>
+                        
+                        <div class="content with-header">
+                            <div class="weather-widget">
+                                <div class="weather-temp">☀️ 맑음 22°C</div>
+                                <div class="weather-desc">등산하기 좋은 날씨입니다!</div>
+                            </div>
+                            
+                            <div class="map-area">
+                                <div class="map-controls">
+                                    <button class="map-btn">📍</button>
+                                    <button class="map-btn">🔍</button>
+                                    <button class="map-btn">⚙️</button>
+                                </div>
+                                <div class="current-location">
+                                    현재 고도: 324m
+                                </div>
+                            </div>
+                            
+                            <div class="action-buttons">
+                                <button class="btn-primary">
+                                    🚀 트래킹 시작
+                                </button>
+                                <button class="btn-danger">
+                                    🆘
+                                </button>
+                            </div>
+                            
+                            <div class="trail-card">
+                                <h4>🥾 추천 등산로</h4>
+                                <div class="trail-info">북한산 백운대 코스</div>
+                                <div class="trail-rating">
+                                    <span class="rating-stars">⭐⭐⭐⭐</span>
+                                    <span>4.2 (1,247개 리뷰)</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bottom-nav">
+                            <div class="nav-item active">
+                                <div class="nav-icon">🏠</div>
+                                <div class="nav-label">홈</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">🚀</div>
+                                <div class="nav-label">트래킹</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">📊</div>
+                                <div class="nav-label">기록</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">👥</div>
+                                <div class="nav-label">커뮤니티</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">⚙️</div>
+                                <div class="nav-label">설정</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="screen-title">홈 화면</div>
+            </div>
+
+            <!-- 트래킹 화면 -->
+            <div class="phone-container">
+                <div class="phone-frame">
+                    <div class="screen">
+                        <div class="status-bar">
+                            <div class="status-left">
+                                <span>9:41</span>
+                            </div>
+                            <div class="status-right">
+                                <span>🔋</span>
+                                <span>85%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="app-header">
+                            🏃‍♂️ 트래킹 진행 중
+                        </div>
+                        
+                        <div class="content with-header">
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-value">1.2</div>
+                                    <div class="stat-label">km 이동거리</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">42</div>
+                                    <div class="stat-label">분 경과시간</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">3.8</div>
+                                    <div class="stat-label">km/h 평균속도</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">180</div>
+                                    <div class="stat-label">m 상승고도</div>
+                                </div>
+                            </div>
+                            
+                            <div class="map-area" style="height: 160px; margin-bottom: 16px;">
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #6b7280; font-size: 14px;">
+                                    실시간 경로 표시
+                                </div>
+                            </div>
+                            
+                            <div class="trail-card" style="margin-bottom: 16px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                    <span style="font-size: 14px; color: #6b7280;">현재 고도</span>
+                                    <span style="font-size: 14px; font-weight: 600;">486m</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                    <span style="font-size: 14px; color: #6b7280;">소모 칼로리</span>
+                                    <span style="font-size: 14px; font-weight: 600;">145 kcal</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="font-size: 14px; color: #6b7280;">목적지까지</span>
+                                    <span style="font-size: 14px; font-weight: 600; color: #22c55e;">800m</span>
+                                </div>
+                            </div>
+                            
+                            <div class="tracking-controls">
+                                <button class="control-btn pause">
+                                    <span>⏸️</span>
+                                    <span>일시정지</span>
+                                </button>
+                                <button class="control-btn stop">
+                                    <span>⏹️</span>
+                                    <span>정지</span>
+                                </button>
+                                <button class="control-btn photo">
+                                    <span>📷</span>
+                                    <span>사진</span>
+                                </button>
+                                <button class="control-btn sos">
+                                    <span>🆘</span>
+                                    <span>SOS</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="bottom-nav">
+                            <div class="nav-item">
+                                <div class="nav-icon">🏠</div>
+                                <div class="nav-label">홈</div>
+                            </div>
+                            <div class="nav-item active">
+                                <div class="nav-icon">🚀</div>
+                                <div class="nav-label">트래킹</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">📊</div>
+                                <div class="nav-label">기록</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">👥</div>
+                                <div class="nav-label">커뮤니티</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">⚙️</div>
+                                <div class="nav-label">설정</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="screen-title">트래킹 화면</div>
+            </div>
+
+            <!-- 등산 기록 화면 -->
+            <div class="phone-container">
+                <div class="phone-frame">
+                    <div class="screen">
+                        <div class="status-bar">
+                            <div class="status-left">
+                                <span>9:41</span>
+                            </div>
+                            <div class="status-right">
+                                <span>🔋</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="app-header">
+                            📊 내 등산 기록
+                        </div>
+                        
+                        <div class="content with-header">
+                            <div class="monthly-stats">
+                                <h3>🏔️ 이번 달 통계</h3>
+                                <div class="stats-row">
+                                    <div class="stats-item">
+                                        <div class="stats-number">8</div>
+                                        <div class="stats-text">등산 횟수</div>
+                                    </div>
+                                    <div class="stats-item">
+                                        <div class="stats-number">42.3</div>
+                                        <div class="stats-text">총 거리(km)</div>
+                                    </div>
+                                    <div class="stats-item">
+                                        <div class="stats-number">1,250</div>
+                                        <div class="stats-text">상승고도(m)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h4 style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">최근 등산 기록</h4>
+                            
+                            <div class="history-item">
+                                <div class="trail-thumb">🏔️</div>
+                                <div class="trail-info-text">
+                                    <h4>북한산 백운대</h4>
+                                    <p>5월 20일 · 3시간 20분 · 5.2km</p>
+                                    <p class="trail-status">완주 ✓</p>
+                                </div>
+                            </div>
+                            
+                            <div class="history-item">
+                                <div class="trail-thumb">🌲</div>
+                                <div class="trail-info-text">
+                                    <h4>남산 순환코스</h4>
+                                    <p>5월 18일 · 1시간 45분 · 3.1km</p>
+                                    <p class="trail-status">완주 ✓</p>
+                                </div>
+                            </div>
+                            
+                            <div class="history-item">
+                                <div class="trail-thumb">⛰️</div>
+                                <div class="trail-info-text">
+                                    <h4>관악산 연주대</h4>
+                                    <p>5월 15일 · 2시간 30분 · 4.8km</p>
+                                    <p class="trail-status">완주 ✓</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bottom-nav">
+                            <div class="nav-item">
+                                <div class="nav-icon">🏠</div>
+                                <div class="nav-label">홈</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">🚀</div>
+                                <div class="nav-label">트래킹</div>
+                            </div>
+                            <div class="nav-item active">
+                                <div class="nav-icon">📊</div>
+                                <div class="nav-label">기록</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">👥</div>
+                                <div class="nav-label">커뮤니티</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">⚙️</div>
+                                <div class="nav-label">설정</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="screen-title">등산 기록 화면</div>
+            </div>
+
+            <!-- 커뮤니티 화면 -->
+            <div class="phone-container">
+                <div class="phone-frame">
+                    <div class="screen">
+                        <div class="status-bar">
+                            <div class="status-left">
+                                <span>9:41</span>
+                            </div>
+                            <div class="status-right">
+                                <span>🔋</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="app-header">
+                            👥 등산 커뮤니티
+                        </div>
+                        
+                        <div class="content with-header">
+                            <div class="write-buttons">
+                                <button class="write-btn">
+                                    ✏️ 후기 작성
+                                </button>
+                                <button class="write-btn secondary">
+                                    👫 동행 찾기
+                                </button>
+                            </div>
+                            
+                            <div class="community-post">
+                                <div class="post-header">
+                                    <div class="user-avatar">등</div>
+                                    <div class="user-info">
+                                        <h5>등산러버</h5>
+                                        <p>북한산 · 2시간 전</p>
+                                    </div>
+                                </div>
+                                <div class="post-content">
+                                    오늘 북한산 백운대 다녀왔어요! 날씨도 좋고 경치가 정말 환상적이었습니다 🏔️
+                                </div>
+                                <div class="post-image">
+                                    📷 등산 사진
+                                </div>
+                                <div class="post-stats">
+                                    <div class="post-actions">
+                                        <button class="post-action">❤️ 12</button>
+                                        <button class="post-action">💬 3</button>
+                                        <button class="post-action">📤 2</button>
+                                    </div>
+                                    <span>5.2km · 3시간 20분</span>
+                                </div>
+                            </div>
+                            
+                            <div class="community-post">
+                                <div class="post-header">
+                                    <div class="user-avatar">산</div>
+                                    <div class="user-info">
+                                        <h5>산악인</h5>
+                                        <p>관악산 · 5시간 전</p>
+                                    </div>
+                                </div>
+                                <div class="post-content">
+                                    내일 관악산 연주대 가실 분 계신가요? 오전 9시에 출발 예정입니다!
+                                </div>
+                                <div style="background: #e0f2fe; padding: 12px; border-radius: 8px; margin: 12px 0; font-size: 12px;">
+                                    <div style="font-weight: 600; margin-bottom: 4px;">📅 동행 모집</div>
+                                    <div>일시: 5월 23일 오전 9시</div>
+                                    <div>장소: 관악산 연주대 코스</div>
+                                </div>
+                                <div class="post-stats">
+                                    <div class="post-actions">
+                                        <button class="post-action">❤️ 8</button>
+                                        <button class="post-action">💬 5</button>
+                                        <button class="post-action">📤 1</button>
+                                    </div>
+                                    <span>모집중</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bottom-nav">
+                            <div class="nav-item">
+                                <div class="nav-icon">🏠</div>
+                                <div class="nav-label">홈</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">🚀</div>
+                                <div class="nav-label">트래킹</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">📊</div>
+                                <div class="nav-label">기록</div>
+                            </div>
+                            <div class="nav-item active">
+                                <div class="nav-icon">👥</div>
+                                <div class="nav-label">커뮤니티</div>
+                            </div>
+                            <div class="nav-item">
+                                <div class="nav-icon">⚙️</div>
+                                <div class="nav-label">설정</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="screen-title">커뮤니티 화면</div>
+            </div>
+
+            <!-- SOS 화면 -->
+            <div class="phone-container">
+                <div class="phone-frame">
+                    <div class="screen sos-screen">
+                        <div class="status-bar" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+                            <div class="status-left">
+                                <span>9:41</span>
+                            </div>
+                            <div class="status-right">
+                                <span>🔋</span>
+                                <span>85%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="sos-header">
+                            🆘 긴급상황 모드
+                        </div>
+                        
+                        <div class="sos-content">
+                            <div class="sos-icon">🆘</div>
+                            <div class="sos-title">긴급상황이 감지되었습니다</div>
+                            <div class="sos-subtitle">구조 요청이 자동으로 전송됩니다</div>
+                            
+                            <div class="location-info">
+                                <h4>📍 현재 위치 정보</h4>
+                                <div class="location-detail">
+                                    <span>위도:</span>
+                                    <strong>37.6687° N</strong>
+                                </div>
+                                <div class="location-detail">
+                                    <span>경도:</span>
+                                    <strong>126.9798° E</strong>
+                                </div>
+                                <div class="location-detail">
+                                    <span>고도:</span>
+                                    <strong>486m</strong>
+                                </div>
+                                <div class="location-detail" style="margin-bottom: 16px;">
+                                    <span>주소:</span>
+                                    <strong>북한산국립공원 백운대</strong>
+                                </div>
+                                <button class="emergency-btn full" style="width: 100%;">
+                                    📍 정확한 위치 공유
+                                </button>
+                            </div>
+                            
+                            <div class="emergency-contacts">
+                                <h4 style="color: #dc2626; font-size: 16px; font-weight: 600; margin-bottom: 16px;">📞 긴급 연락처</h4>
+                                <div class="emergency-buttons">
+                                    <button class="emergency-btn primary">119 신고</button>
+                                    <button class="emergency-btn secondary">가족 연락</button>
+                                </div>
+                                <button class="emergency-btn full" style="width: 100%;">
+                                    📱 주변 등산객에게 알림
+                                </button>
+                            </div>
+                            
+                            <button class="cancel-btn">
+                                ❌ 긴급상황 해제
+                            </button>
+                        </div>
+                        
+                        <div class="bottom-nav" style="background: #ffcdd2;">
+                            <div class="nav-item">
+                                <div class="nav-icon" style="color: #dc2626;">🆘</div>
+                                <div class="nav-label" style="color: #dc2626;">SOS</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="screen-title">SOS 긴급상황 화면</div>
+            </div>
+        </div>
+
+        <!-- 디자인 시스템 정보 -->
+        <div style="background: white; border-radius: 16px; padding: 32px; margin-top: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 24px; color: #1f2937;">🎨 디자인 시스템</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                <div>
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #374151;">컬러 팔레트</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #22c55e, #16a34a); border-radius: 4px;"></div>
+                            <span style="font-size: 14px; color: #6b7280;">Primary Green (#22c55e)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 4px;"></div>
+                            <span style="font-size: 14px; color: #6b7280;">Secondary Blue (#3b82f6)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 4px;"></div>
+                            <span style="font-size: 14px; color: #6b7280;">Danger Red (#ef4444)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 24px; height: 24px; background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 4px;"></div>
+                            <span style="font-size: 14px; color: #6b7280;">Background (#f8f9fa)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #374151;">타이포그래피</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="font-size: 20px; font-weight: 700; color: #1f2937;">Header Bold 20px</div>
+                        <div style="font-size: 16px; font-weight: 600; color: #374151;">Subtitle Semibold 16px</div>
+                        <div style="font-size: 14px; font-weight: 400; color: #6b7280;">Body Regular 14px</div>
+                        <div style="font-size: 12px; font-weight: 500; color: #9ca3af;">Caption Medium 12px</div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #374151;">주요 원칙</h3>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        <li style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; color: #6b7280;">
+                            <span style="color: #22c55e;">✓</span>
+                            심플하고 직관적인 인터페이스
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; color: #6b7280;">
+                            <span style="color: #22c55e;">✓</span>
+                            자연 친화적 그린 컬러 시스템
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; color: #6b7280;">
+                            <span style="color: #22c55e;">✓</span>
+                            터치하기 쉬운 버튼 크기 (44px+)
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; color: #6b7280;">
+                            <span style="color: #22c55e;">✓</span>
+                            명확한 정보 계층 구조
+                        </li>
+                        <li style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #6b7280;">
+                            <span style="color: #22c55e;">✓</span>
+                            응급상황 시 명확한 시각적 구분
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

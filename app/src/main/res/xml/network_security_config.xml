@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 산림청 API를 위한 cleartext 트래픽 허용 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">openapi.forest.go.kr</domain>
+        <domain includeSubdomains="true">apis.data.go.kr</domain>
+    </domain-config>
+    
+    <!-- 카카오 지도 API를 위한 설정 -->
+    <domain-config>
+        <domain includeSubdomains="true">devrepo.kakao.com</domain>
+        <domain includeSubdomains="true">map-api.kakaomobility.com</domain>
+        <domain includeSubdomains="true">tile.map.kakao.com</domain>
+    </domain-config>
+    
+    <!-- 기본 보안 설정 유지 -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config> 

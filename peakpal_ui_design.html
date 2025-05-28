@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeakPal - 스마트 등산 앱</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #2196F3;
+            --danger-color: #F44336;
+            --background-color: #FFFFFF;
+            --surface-color: #F5F5F5;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --border-color: #E0E0E0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* App Container */
+        .app-container {
+            max-width: 414px;
+            margin: 0 auto;
+            height: 100vh;
+            position: relative;
+            background: var(--background-color);
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* Header */
+        .header {
+            background: var(--background-color);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .location-info {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .status-indicators {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        /* Main Content */
+        .main-content {
+            height: calc(100vh - 140px);
+            overflow-y: auto;
+            padding-bottom: 20px;
+        }
+
+        /* Map Container */
+        .map-container {
+            height: 300px;
+            background: linear-gradient(135deg, #81C784 0%, #4CAF50 100%);
+            position: relative;
+            margin: 0 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="30" r="2" fill="white" opacity="0.7"/><circle cx="60" cy="20" r="1.5" fill="white" opacity="0.5"/><circle cx="80" cy="70" r="1" fill="white" opacity="0.8"/><path d="M10,80 Q30,60 50,80 T90,70" stroke="white" stroke-width="0.5" fill="none" opacity="0.6"/></svg>');
+            background-size: cover;
+        }
+
+        .current-location {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: var(--primary-color);
+            border: 3px solid white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+
+        .map-controls {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .map-control-btn {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .map-control-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .altitude-info {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Trail Recommendation Card */
+        .trail-card {
+            background: white;
+            margin: 0 20px;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .trail-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .trail-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .trail-info {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .trail-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            padding: 10px 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            cursor: pointer;
+            transition: color 0.3s;
+            text-decoration: none;
+            color: var(--text-secondary);
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .nav-item:hover {
+            color: var(--primary-color);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+        }
+
+        /* Tracking Screen */
+        .tracking-screen {
+            display: none;
+            padding: 20px;
+        }
+
+        .tracking-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .tracking-time {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .tracking-status {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-unit {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .tracking-map {
+            height: 200px;
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .tracking-info {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .tracking-info h3 {
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .tracking-controls {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .control-btn {
+            padding: 15px 10px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: var(--shadow);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .control-icon {
+            font-size: 24px;
+        }
+
+        .control-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Records Screen */
+        .records-screen {
+            display: none;
+            padding: 20px;
+        }
+
+        .monthly-stats {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .monthly-stats h2 {
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .monthly-stat {
+            text-align: center;
+        }
+
+        .monthly-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .monthly-stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .growth-indicator {
+            color: var(--primary-color);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .record-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .record-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .record-thumbnail {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4CAF50, #81C784);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .record-content {
+            flex: 1;
+        }
+
+        .record-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .record-details {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .record-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        /* Community Screen */
+        .community-screen {
+            display: none;
+            padding: 20px;
+        }
+
+        .action-buttons-community {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .post-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .post-meta {
+            flex: 1;
+        }
+
+        .username {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .post-location {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .post-content {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .post-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #E8F5E8, #C8E6C9);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .post-stats {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s;
+        }
+
+        .action-btn:hover {
+            color: var(--primary-color);
+        }
+
+        /* Settings Screen */
+        .settings-screen {
+            display: none;
+            padding: 20px;
+        }
+
+        .profile-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .profile-info h3 {
+            margin-bottom: 5px;
+        }
+
+        .profile-info p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .settings-section {
+            margin-bottom: 30px;
+        }
+
+        .settings-section h3 {
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        .setting-item {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .setting-label {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .setting-value {
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .toggle {
+            width: 40px;
+            height: 20px;
+            background: var(--border-color);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: var(--primary-color);
+        }
+
+        .toggle-handle {
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .toggle.active .toggle-handle {
+            transform: translateX(20px);
+        }
+
+        /* SOS Screen */
+        .sos-screen {
+            display: none;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #F44336, #E53935);
+            color: white;
+            text-align: center;
+            height: 100vh;
+        }
+
+        .sos-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulse 1s infinite;
+        }
+
+        .sos-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .sos-subtitle {
+            font-size: 16px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .location-card {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .emergency-contacts {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .emergency-btn {
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .emergency-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .status-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .cancel-sos {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cancel-sos:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 20px;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 350px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .modal-text {
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 375px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .tracking-controls {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background-color: #121212;
+                --surface-color: #1E1E1E;
+                --text-primary: #FFFFFF;
+                --text-secondary: #B0B0B0;
+                --border-color: #333333;
+            }
+            
+            .map-container {
+                background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s ease-in-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* Hide all screens initially except home */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .home-screen {
+            display: block; /* 홈 화면은 기본적으로 표시 */
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="location-info">
+                <span>📍 북한산국립공원</span>
+            </div>
+            <div class="status-indicators">
+                <span>🌤 맑음 22°C</span>
+                <span>🔋 85%</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Home Screen -->
+            <div id="home" class="screen home-screen active">
+                <!-- Map Container -->
+                <div class="map-container">
+                    <div class="map-overlay"></div>
+                    <div class="current-location"></div>
+                    <div class="map-controls">
+                        <button class="map-control-btn" onclick="centerLocation()">📍</button>
+                        <button class="map-control-btn" onclick="zoomIn()">🔍</button>
+                        <button class="map-control-btn" onclick="openSettings()">⚙️</button>
+                    </div>
+                    <div class="altitude-info">현재 고도: 324m</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="startTracking()">
+                        🚀 트래킹 시작
+                    </button>
+                    <button class="btn btn-danger" onclick="showSOSModal()">
+                        🆘 SOS
+                    </button>
+                </div>
+
+                <!-- Trail Recommendation -->
+                <div class="trail-card">
+                    <div class="trail-header">
+                        <span style="font-size: 24px;">🥾</span>
+                        <span class="trail-title">추천 등산로</span>
+                    </div>
+                    <h3>북한산 백운대 코스</h3>
+                    <div class="trail-info">
+                        <span>난이도: 중급</span>
+                        <span>소요시간: 3시간</span>
+                    </div>
+                    <div class="trail-rating">
+                        <span>⭐⭐⭐⭐</span>
+                        <span>4.2 (1,247개 리뷰)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tracking Screen -->
+            <div id="tracking" class="screen tracking-screen">
+                <div class="tracking-header">
+                    <div class="tracking-time">42:15</div>
+                    <div class="tracking-status">🏃‍♂️ 트래킹 진행 중</div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">1.2</div>
+                        <div class="stat-unit">km</div>
+                        <div class="stat-label">이동거리</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">42</div>
+                        <div class="stat-unit">분</div>
+                        <div class="stat-label">경과시간</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">3.8</div>
+                        <div class="stat-unit">km/h</div>
+                        <div class="stat-label">평균속도</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">180</div>
+                        <div class="stat-unit">m</div>
+                        <div class="stat-label">상승고도</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">486</div>
+                        <div class="stat-unit">m</div>
+                        <div class="stat-label">현재고도</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">145</div>
+                        <div class="stat-unit">kcal</div>
+                        <div class="stat-label">칼로리</div>
+                    </div>
+                </div>
+
+                <div class="tracking-map">
+                    <span>📍 실시간 경로 지도</span>
+                </div>
+
+                <div class="tracking-info">
+                    <h3>📊 실시간 정보</h3>
+                    <div class="info-item">
+                        <span>현재 속도:</span>
+                        <span>4.2 km/h</span>
+                    </div>
+                    <div class="info-item">
+                        <span>목적지까지:</span>
+                        <span>800m (약 12분)</span>
+                    </div>
+                    <div class="info-item">
+                        <span>최고 고도:</span>
+                        <span>486m</span>
+                    </div>
+                </div>
+
+                <div class="tracking-controls">
+                    <button class="control-btn" onclick="pauseTracking()">
+                        <div class="control-icon">⏸️</div>
+                        <div class="control-label">일시정지</div>
+                    </button>
+                    <button class="control-btn" onclick="stopTracking()">
+                        <div class="control-icon">⏹️</div>
+                        <div class="control-label">정지</div>
+                    </button>
+                    <button class="control-btn" onclick="takePhoto()">
+                        <div class="control-icon">📷</div>
+                        <div class="control-label">사진</div>
+                    </button>
+                    <button class="control-btn" onclick="emergencySOS()">
+                        <div class="control-icon">🆘</div>
+                        <div class="control-label">SOS</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Records Screen -->
+            <div id="records" class="screen records-screen">
+                <div class="monthly-stats">
+                    <h2>🏔️ 이번 달 통계</h2>
+                    <div class="stats-row">
+                        <div class="monthly-stat">
+                            <div class="monthly-stat-value">8</div>
+                            <div class="monthly-stat-label">등산횟수</div>
+                        </div>
+                        <div class="monthly-stat">
+                            <div class="monthly-stat-value">42.3</div>
+                            <div class="monthly-stat-label">총거리(km)</div>
+                        </div>
+                        <div class="monthly-stat">
+                            <div class="monthly-stat-value">1,250</div>
+                            <div class="monthly-stat-label">상승고도(m)</div>
+                        </div>
+                    </div>
+                    <div class="growth-indicator">📈 전월 대비 +25% ↗️</div>
+                </div>
+
+                <h3 style="margin-bottom: 20px;">📅 최근 등산 기록</h3>
+
+                <div class="record-item" onclick="showRecordDetail('북한산 백운대')">
+                    <div class="record-thumbnail">🏔️</div>
+                    <div class="record-content">
+                        <div class="record-title">🏔️ 북한산 백운대</div>
+                        <div class="record-details">5월 20일 · 3시간 20분 · 5.2km</div>
+                        <div class="record-status">
+                            <span>완주 ✅</span>
+                            <span>⭐⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="record-item" onclick="showRecordDetail('남산 순환코스')">
+                    <div class="record-thumbnail">🌲</div>
+                    <div class="record-content">
+                        <div class="record-title">🌲 남산 순환코스</div>
+                        <div class="record-details">5월 18일 · 1시간 45분 · 3.1km</div>
+                        <div class="record-status">
+                            <span>완주 ✅</span>
+                            <span>⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="record-item" onclick="showRecordDetail('관악산 연주대')">
+                    <div class="record-thumbnail">⛰️</div>
+                    <div class="record-content">
+                        <div class="record-title">⛰️ 관악산 연주대</div>
+                        <div class="record-details">5월 15일 · 2시간 30분 · 4.8km</div>
+                        <div class="record-status">
+                            <span>완주 ✅</span>
+                            <span>⭐⭐⭐⭐⭐</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="record-item">
+                    <div class="record-content" style="text-align: center; width: 100%;">
+                        <div class="record-title">📊 더 많은 통계 보기</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Community Screen -->
+            <div id="community" class="screen community-screen">
+                <div class="action-buttons-community">
+                    <button class="btn btn-primary">✏️ 후기 작성</button>
+                    <button class="btn btn-primary">👫 동행 찾기</button>
+                </div>
+
+                <h3 style="margin-bottom: 20px;">🔥 인기 게시물</h3>
+
+                <div class="post-item">
+                    <div class="post-header">
+                        <div class="user-avatar">등</div>
+                        <div class="post-meta">
+                            <div class="username">등산러버</div>
+                            <div class="post-location">북한산 · 2시간 전</div>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        오늘 북한산 백운대 다녀왔어요!<br>
+                        날씨도 좋고 경치가 정말 환상적... 📷
+                    </div>
+                    <div class="post-image">
+                        [등산로 사진]
+                    </div>
+                    <div class="post-stats">
+                        5.2km · 3시간 20분 · 고도 836m
+                    </div>
+                    <div class="post-actions">
+                        <button class="action-btn">❤️ 12</button>
+                        <button class="action-btn">💬 3</button>
+                        <button class="action-btn">📤 2</button>
+                    </div>
+                </div>
+
+                <div class="post-item">
+                    <div class="post-header">
+                        <div class="user-avatar">산</div>
+                        <div class="post-meta">
+                            <div class="username">산악인</div>
+                            <div class="post-location">관악산 · 5시간 전</div>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        📅 내일 관악산 연주대 가실 분?<br>
+                        오전 9시 출발 예정입니다!
+                    </div>
+                    <div style="background: #E8F5E8; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <h4>📅 동행 모집</h4>
+                        <div style="font-size: 14px; margin-top: 10px;">
+                            <div>일시: 5월 23일 오전 9시</div>
+                            <div>장소: 관악산 연주대 코스</div>
+                            <div>난이도: 중급</div>
+                            <div>모집인원: 2/4명</div>
+                        </div>
+                    </div>
+                    <div class="post-actions">
+                        <button class="action-btn">❤️ 8</button>
+                        <button class="action-btn">💬 5</button>
+                        <button class="action-btn">📤 1</button>
+                        <button class="btn btn-primary" style="margin-left: auto; padding: 8px 16px; font-size: 12px;">참여하기</button>
+                    </div>
+                </div>
+
+                <div class="post-item">
+                    <div class="post-header">
+                        <div class="user-avatar">초</div>
+                        <div class="post-meta">
+                            <div class="username">초보등산</div>
+                            <div class="post-location">설악산 · 1일 전</div>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        🆘 설악산에서 길을 잃었어요...<br>
+                        현재 위치 공유합니다. 도움 부탁!
+                    </div>
+                    <div style="background: #FFEBEE; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
+                        📍 실시간 위치 공유 중
+                    </div>
+                    <div class="post-actions">
+                        <button class="action-btn" style="color: #F44336;">🚨 15</button>
+                        <button class="action-btn">💬 23</button>
+                        <button class="btn btn-danger" style="margin-left: auto; padding: 8px 16px; font-size: 12px;">📞 구조요청</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Screen -->
+            <div id="settings" class="screen settings-screen">
+                <div class="profile-card">
+                    <div class="profile-avatar">김</div>
+                    <div class="profile-info">
+                        <h3>김등산</h3>
+                        <p>kim.hiking@email.com</p>
+                        <p>등산 경력: 중급 (2년)</p>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>🎯 트래킹 설정</h3>
+                    <div class="setting-item">
+                        <span class="setting-label">GPS 정확도</span>
+                        <span class="setting-value">고정밀 ▽</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">위치 업데이트 주기</span>
+                        <span class="setting-value">5초 ▽</span>
+                    </div>
+                    <div class="setting-item" onclick="toggleSetting(this)">
+                        <span class="setting-label">자동 일시정지</span>
+                        <div class="toggle active">
+                            <div class="toggle-handle"></div>
+                        </div>
+                    </div>
+                    <div class="setting-item" onclick="toggleSetting(this)">
+                        <span class="setting-label">음성 안내</span>
+                        <div class="toggle active">
+                            <div class="toggle-handle"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>🔔 알림 설정</h3>
+                    <div class="setting-item" onclick="toggleSetting(this)">
+                        <span class="setting-label">위험 지역 경고</span>
+                        <div class="toggle active">
+                            <div class="toggle-handle"></div>
+                        </div>
+                    </div>
+                    <div class="setting-item" onclick="toggleSetting(this)">
+                        <span class="setting-label">날씨 변화 알림</span>
+                        <div class="toggle active">
+                            <div class="toggle-handle"></div>
+                        </div>
+                    </div>
+                    <div class="setting-item" onclick="toggleSetting(this)">
+                        <span class="setting-label">목표 달성 알림</span>
+                        <div class="toggle active">
+                            <div class="toggle-handle"></div>
+                        </div>
+                    </div>
+                    <div class="setting-item" onclick="toggleSetting(this)">
+                        <span class="setting-label">커뮤니티 알림</span>
+                        <div class="toggle">
+                            <div class="toggle-handle"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>🛡️ 안전 설정</h3>
+                    <div class="setting-item">
+                        <span class="setting-label">비상연락처 (2명)</span>
+                        <span class="setting-value">설정 완료 →</span>
+                    </div>
+                    <div class="setting-item" onclick="toggleSetting(this)">
+                        <span class="setting-label">SOS 자동 발송</span>
+                        <div class="toggle active">
+                            <div class="toggle-handle"></div>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">위치 공유 설정</span>
+                        <span class="setting-value">친구만 ▽</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>📱 앱 설정</h3>
+                    <div class="setting-item" onclick="toggleSetting(this)">
+                        <span class="setting-label">다크 모드</span>
+                        <div class="toggle">
+                            <div class="toggle-handle"></div>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">언어</span>
+                        <span class="setting-value">한국어 ▽</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">단위</span>
+                        <span class="setting-value">미터법 ▽</span>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">오프라인 지도</span>
+                        <span class="setting-value">관리 →</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SOS Screen -->
+            <div id="sos" class="screen sos-screen">
+                <div class="sos-icon">🆘</div>
+                <h1 class="sos-title">긴급상황 모드 활성화</h1>
+                <p class="sos-subtitle">구조 요청이 자동으로 전송됩니다</p>
+
+                <div class="location-card">
+                    <h3>📍 현재 위치 정보</h3>
+                    <div style="margin: 15px 0; line-height: 1.6;">
+                        <div>위도: 37.6687° N</div>
+                        <div>경도: 126.9798° E</div>
+                        <div>고도: 486m</div>
+                        <div>정확도: ±3m</div>
+                        <div style="margin-top: 10px;">📍 북한산국립공원 백운대 근처</div>
+                    </div>
+                    <button class="emergency-btn" style="width: 100%;">📍 정확한 위치 공유</button>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <h3 style="margin-bottom: 15px;">📞 긴급 연락처</h3>
+                    <div class="emergency-contacts">
+                        <button class="emergency-btn">119 신고</button>
+                        <button class="emergency-btn">가족 연락</button>
+                    </div>
+                    <button class="emergency-btn" style="width: 100%; margin-top: 15px;">📱 주변 등산객에게 알림</button>
+                </div>
+
+                <div class="status-card">
+                    <h3>🔄 실시간 상황 전송 중</h3>
+                    <div style="margin: 15px 0; line-height: 1.6;">
+                        <div>⏱️ 경과시간: 00:02:34</div>
+                        <div>📡 신호강도: ████░ 80%</div>
+                        <div>🔋 배터리: 85% (절약모드 활성화)</div>
+                    </div>
+                </div>
+
+                <button class="cancel-sos" onclick="cancelSOS()">
+                    ❌ 긴급상황 해제<br>
+                    <small>(5초간 누르고 계세요)</small>
+                </button>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" onclick="showScreen('home'); return false;">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">홈</div>
+            </a>
+            <a href="#" class="nav-item" onclick="showScreen('tracking'); return false;">
+                <div class="nav-icon">🚀</div>
+                <div class="nav-label">트래킹</div>
+            </a>
+            <a href="#" class="nav-item" onclick="showScreen('records'); return false;">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">기록</div>
+            </a>
+            <a href="#" class="nav-item" onclick="showScreen('community'); return false;">
+                <div class="nav-icon">👥</div>
+                <div class="nav-label">커뮤니티</div>
+            </a>
+            <a href="#" class="nav-item" onclick="showScreen('settings'); return false;">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-label">설정</div>
+            </a>
+        </nav>
+    </div>
+
+    <!-- SOS Confirmation Modal -->
+    <div id="sosModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">🆘 긴급상황 신고</h2>
+            <p class="modal-text">
+                정말로 긴급상황을 신고하시겠습니까?<br><br>
+                이 기능은 실제 응급상황에서만 사용해 주시기 바랍니다.
+            </p>
+            <div class="modal-buttons">
+                <button class="btn" onclick="hideSOSModal()" style="background: #ddd; color: #333;">❌ 취소</button>
+                <button class="btn btn-danger" onclick="activateSOS()">🆘 긴급신고 확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tracking Complete Modal -->
+    <div id="trackingCompleteModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">🎉 등산 완료!</h2>
+            <div style="font-size: 48px; margin: 20px 0;">🏆</div>
+            <h3>북한산 정복 완료!</h3>
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="display: flex; justify-content: space-around; margin-bottom: 15px;">
+                    <div style="text-align: center;">
+                        <div style="font-weight: bold;">5.2km</div>
+                        <div style="font-size: 12px; color: #666;">거리</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-weight: bold;">3:20:15</div>
+                        <div style="font-size: 12px; color: #666;">시간</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-weight: bold;">650m</div>
+                        <div style="font-size: 12px; color: #666;">상승고도</div>
+                    </div>
+                </div>
+                <div style="text-align: center; font-weight: bold; color: var(--primary-color);">
+                    💪 485 kcal 소모
+                </div>
+            </div>
+            <div style="margin: 20px 0;">
+                <div>⭐ 이번 등산은 어떠셨나요?</div>
+                <div style="font-size: 24px; margin: 10px 0;">⭐⭐⭐⭐⭐</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-primary">📝 후기 작성</button>
+                <button class="btn btn-primary">🔄 기록 공유</button>
+            </div>
+            <button class="btn" onclick="hideTrackingCompleteModal()" style="width: 100%; margin-top: 15px; background: var(--primary-color); color: white;">✅ 확인</button>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentScreen = 'home';
+        let isTracking = false;
+        let trackingStartTime = null;
+        let trackingTimer = null;
+
+        // Screen navigation
+        function showScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+                screen.style.display = 'none';
+            });
+            
+            // Show selected screen
+            const targetScreen = document.getElementById(screenId);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+                targetScreen.style.display = 'block';
+            }
+            
+            // Update nav active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find and activate the correct nav item by checking onclick attribute
+            document.querySelectorAll('.nav-item').forEach(item => {
+                const onclickAttr = item.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(`'${screenId}'`)) {
+                    item.classList.add('active');
+                }
+            });
+            
+            currentScreen = screenId;
+        }
+
+        // Map interactions
+        function centerLocation() {
+            console.log('Centering on current location...');
+            // Animate location centering
+            const currentLocation = document.querySelector('.current-location');
+            currentLocation.style.animation = 'none';
+            setTimeout(() => {
+                currentLocation.style.animation = 'pulse 2s infinite';
+            }, 100);
+        }
+
+        function zoomIn() {
+            console.log('Zooming in...');
+        }
+
+        function openSettings() {
+            showScreen('settings');
+        }
+
+        // Tracking functions
+        function startTracking() {
+            if (!isTracking) {
+                isTracking = true;
+                trackingStartTime = new Date();
+                showScreen('tracking');
+                
+                // Start tracking timer
+                trackingTimer = setInterval(updateTrackingTime, 1000);
+                
+                console.log('Tracking started');
+            }
+        }
+
+        function pauseTracking() {
+            if (isTracking) {
+                clearInterval(trackingTimer);
+                console.log('Tracking paused');
+            }
+        }
+
+        function stopTracking() {
+            if (isTracking) {
+                isTracking = false;
+                clearInterval(trackingTimer);
+                showTrackingCompleteModal();
+                console.log('Tracking stopped');
+            }
+        }
+
+        function updateTrackingTime() {
+            if (trackingStartTime) {
+                const now = new Date();
+                const elapsed = Math.floor((now - trackingStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                
+                document.querySelector('.tracking-time').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function takePhoto() {
+            console.log('Taking photo...');
+            // Simulate camera flash
+            document.body.style.background = 'white';
+            setTimeout(() => {
+                document.body.style.background = '';
+            }, 100);
+        }
+
+        function emergencySOS() {
+            showSOSModal();
+        }
+
+        // SOS functions
+        function showSOSModal() {
+            document.getElementById('sosModal').style.display = 'flex';
+        }
+
+        function hideSOSModal() {
+            document.getElementById('sosModal').style.display = 'none';
+        }
+
+        function activateSOS() {
+            hideSOSModal();
+            showScreen('sos');
+            
+            // Start SOS countdown
+            setTimeout(() => {
+                console.log('SOS activated - emergency services contacted');
+            }, 3000);
+        }
+
+        function cancelSOS() {
+            showScreen('home');
+            console.log('SOS cancelled');
+        }
+
+        // Modal functions
+        function showTrackingCompleteModal() {
+            document.getElementById('trackingCompleteModal').style.display = 'flex';
+        }
+
+        function hideTrackingCompleteModal() {
+            document.getElementById('trackingCompleteModal').style.display = 'none';
+            showScreen('records');
+        }
+
+        // Settings functions
+        function toggleSetting(element) {
+            const toggle = element.querySelector('.toggle');
+            if (toggle) {
+                toggle.classList.toggle('active');
+            }
+        }
+
+        // Record detail function
+        function showRecordDetail(recordName) {
+            alert(`${recordName} 상세 기록을 표시합니다.`);
+        }
+
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+
+        // Add touch feedback for buttons
+        document.querySelectorAll('.btn, .control-btn, .nav-item').forEach(button => {
+            button.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.95)';
+            });
+            
+            button.addEventListener('touchend', function() {
+                this.style.transform = '';
+            });
+        });
+
+        // Simulate real-time updates for tracking screen
+        function simulateTrackingData() {
+            if (isTracking) {
+                // Update random tracking data
+                const statCards = document.querySelectorAll('.stat-card .stat-value');
+                if (statCards.length >= 6) {
+                    // Distance (km)
+                    const currentDistance = parseFloat(statCards[0].textContent);
+                    statCards[0].textContent = (currentDistance + 0.01).toFixed(2);
+                    
+                    // Current altitude (m)
+                    const currentAltitude = parseInt(statCards[4].textContent);
+                    statCards[4].textContent = currentAltitude + Math.floor(Math.random() * 3 - 1);
+                    
+                    // Calories
+                    const currentCalories = parseInt(statCards[5].textContent);
+                    statCards[5].textContent = currentCalories + 1;
+                }
+            }
+        }
+
+        // Start simulation when tracking begins
+        setInterval(simulateTrackingData, 5000);
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('PeakPal UI loaded successfully!');
+            
+            // 홈 화면 초기화
+            showScreen('home');
+            
+            // Add fade-in animation to main content
+            document.querySelector('.main-content').classList.add('fade-in');
+        });
+
+        // Add swipe gesture support for mobile
+        let startX = 0;
+        let startY = 0;
+
+        document.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchend', function(e) {
+            if (!startX || !startY) return;
+            
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            
+            const deltaX = endX - startX;
+            const deltaY = endY - startY;
+            
+            // Ignore small movements
+            if (Math.abs(deltaX) < 50 && Math.abs(deltaY) < 50) return;
+            
+            // Determine swipe direction
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Horizontal swipe
+                if (deltaX > 0) {
+                    // Swipe right - go to previous screen
+                    console.log('Swiped right');
+                } else {
+                    // Swipe left - go to next screen
+                    console.log('Swiped left');
+                }
+            }
+            
+            startX = 0;
+            startY = 0;
+        });
+    </script>
+</body>
+</html> 
