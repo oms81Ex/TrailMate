@@ -30,37 +30,65 @@ fun KakaoMapView(
     var mapView by remember { mutableStateOf<MapView?>(null) }
     var kakaoMap by remember { mutableStateOf<KakaoMap?>(null) }
     
-    // 생명주기 관찰자
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> {
-                    mapView?.resume()
+    // 생명주기 관찰자 - MapView가 초기화된 후에만 사용
+    DisposableEffect(mapView, lifecycleOwner) {
+        if (mapView != null) {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_RESUME -> {
+                        Log.d("KakaoMapView", "Lifecycle ON_RESUME - mapView: $mapView")
+                        try {
+                            mapView?.resume()
+                        } catch (e: Exception) {
+                            Log.e("KakaoMapView", "Error resuming MapView", e)
+                        }
+                    }
+                    Lifecycle.Event.ON_PAUSE -> {
+                        Log.d("KakaoMapView", "Lifecycle ON_PAUSE")
+                        try {
+                            mapView?.pause()
+                        } catch (e: Exception) {
+                            Log.e("KakaoMapView", "Error pausing MapView", e)
+                        }
+                    }
+                    Lifecycle.Event.ON_DESTROY -> {
+                        Log.d("KakaoMapView", "Lifecycle ON_DESTROY")
+                    }
+                    else -> {}
                 }
-                Lifecycle.Event.ON_PAUSE -> {
-                    mapView?.pause()
-                }
-                Lifecycle.Event.ON_DESTROY -> {
-                    // MapView는 자동으로 정리됨
-                }
-                else -> {}
             }
-        }
-        
-        lifecycleOwner.lifecycle.addObserver(observer)
-        
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
+            
+            lifecycleOwner.lifecycle.addObserver(observer)
+            
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        } else {
+            onDispose {}
         }
     }
     
     AndroidView(
         modifier = modifier,
         factory = { context ->
-            createMapView(context).also { 
-                mapView = it
-                initializeMap(it, latitude, longitude, zoomLevel, onMapReady) { map ->
-                    kakaoMap = map
+            Log.d("KakaoMapView", "AndroidView factory called")
+            Log.d("KakaoMapView", "AndroidView modifier: $modifier")
+            
+            createMapView(context).also { createdMapView ->
+                mapView = createdMapView
+                Log.d("KakaoMapView", "MapView assigned to state")
+                
+                // View가 레이아웃된 후 초기화
+                createdMapView.post {
+                    Log.d("KakaoMapView", "MapView post() - width: ${createdMapView.width}, height: ${createdMapView.height}")
+                    if (createdMapView.width > 0 && createdMapView.height > 0) {
+                        Log.d("KakaoMapView", "MapView has valid size, initializing...")
+                        initializeMap(createdMapView, latitude, longitude, zoomLevel, onMapReady) { map ->
+                            kakaoMap = map
+                        }
+                    } else {
+                        Log.e("KakaoMapView", "MapView has invalid size!")
+                    }
                 }
             }
         },
@@ -120,9 +148,14 @@ fun zoomOut(kakaoMap: KakaoMap?) {
 
 private fun createMapView(context: Context): MapView {
     Log.d("KakaoMapView", "Creating MapView...")
+    Log.d("KakaoMapView", "Context: ${context.javaClass.simpleName}")
+    Log.d("KakaoMapView", "Context package: ${context.packageName}")
+    
     return MapView(context).apply {
         id = android.R.id.content
         Log.d("KakaoMapView", "MapView created with ID: $id")
+        Log.d("KakaoMapView", "MapView class: ${this.javaClass.name}")
+        Log.d("KakaoMapView", "MapView width: ${this.width}, height: ${this.height}")
     }
 }
 
@@ -135,6 +168,13 @@ private fun initializeMap(
     onKakaoMapReady: (KakaoMap) -> Unit
 ) {
     Log.d("KakaoMapView", "Starting MapView initialization...")
+    Log.d("KakaoMapView", "Target location: ($latitude, $longitude)")
+    Log.d("KakaoMapView", "Zoom level: $zoomLevel")
+    Log.d("KakaoMapView", "MapView dimensions: ${mapView.width}x${mapView.height}")
+    
+    // SDK 초기화 상태 확인
+    Log.d("KakaoMapView", "KakaoMapSdk initialized: ${KakaoMapSdk.isInitialized()}")
+    
     mapView.start(
         object : MapLifeCycleCallback() {
             override fun onMapDestroy() {
@@ -168,7 +208,7 @@ private fun initializeMap(
                         // 하얀 화면 문제 해결을 위한 추가 정보
                         if (errorCode == 401 || errorCode == 403) {
                             Log.e("KakaoMapView", "!!! API KEY 문제로 인한 하얀 화면 가능성 높음 !!!")
-                            Log.e("KakaoMapView", "현재 사용 중인 API 키: bd9941dd7fbc5a5a94c7ff1da148ef4d")
+                            Log.e("KakaoMapView", "현재 사용 중인 API 키: 14526700db17a2bfe6fadd60b70d4b66")
                             Log.e("KakaoMapView", "필요한 설정:")
                             Log.e("KakaoMapView", "  📱 패키지명: com.dev_oms.trailmate")
                             Log.e("KakaoMapView", "  🔑 키 해시: z7mKdyTfmLmyq5vUFAsDMHcnZBo=")
@@ -215,27 +255,42 @@ private fun initializeMap(
             }
             
             override fun getPosition(): LatLng {
-                return LatLng.from(latitude, longitude)
+                val position = LatLng.from(latitude, longitude)
+                Log.d("KakaoMapView", "getPosition() called: $position")
+                return position
             }
             
             override fun getZoomLevel(): Int {
+                Log.d("KakaoMapView", "getZoomLevel() called: $zoomLevel")
                 return zoomLevel
             }
             
             override fun getMapViewInfo(): MapViewInfo {
-                return MapViewInfo.from("TrailMateMapView")
+                // 다양한 viewName 테스트
+                // val viewName = "mapview" // 기본값
+                // val viewName = "map" // 더 짧은 이름
+                val viewName = "" // 빈 문자열 테스트
+                val mapViewInfo = MapViewInfo.from(viewName)
+                Log.d("KakaoMapView", "getMapViewInfo() called: viewName='$viewName'")
+                Log.d("KakaoMapView", "MapViewInfo created: $mapViewInfo")
+                return mapViewInfo
             }
             
             override fun getViewName(): String {
-                return "TrailMateMapView"
+                val viewName = "" // 빈 문자열 테스트
+                Log.d("KakaoMapView", "getViewName() called: '$viewName'")
+                return viewName
             }
             
             override fun isVisible(): Boolean {
+                Log.d("KakaoMapView", "isVisible() called: true")
                 return true
             }
             
             override fun getTag(): String {
-                return "TrailMateMap"
+                val tag = "TrailMateMap"
+                Log.d("KakaoMapView", "getTag() called: '$tag'")
+                return tag
             }
         }
     )

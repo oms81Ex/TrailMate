@@ -49,7 +49,7 @@ class KakaoMapAuthTestActivity : ComponentActivity() {
         Log.d("KakaoAuthTest", "3️⃣ 앱 정보: TrailMate v1.0")
         
         // 4. API 키 확인 (첫 8자리만)
-        val apiKey = "bd9941dd7fbc5a5a94c7ff1da148ef4d"
+        val apiKey = "14526700db17a2bfe6fadd60b70d4b66"
         Log.d("KakaoAuthTest", "4️⃣ API 키 (일부): ${apiKey.take(8)}...")
         
         // 5. 필요한 키 해시 정보

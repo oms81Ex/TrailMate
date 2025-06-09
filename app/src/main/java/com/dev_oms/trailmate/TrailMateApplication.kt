@@ -9,7 +9,7 @@ class TrailMateApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         
-        val apiKey = "bd9941dd7fbc5a5a94c7ff1da148ef4d"
+        val apiKey = "14526700db17a2bfe6fadd60b70d4b66"
         Log.d("TrailMateApp", "🔑 카카오맵 API 키로 초기화 시작: ${apiKey.take(8)}...")
         
         try {
